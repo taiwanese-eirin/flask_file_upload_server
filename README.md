@@ -1,6 +1,8 @@
 # Flask File Upload Server
-Work with ChatGPT to build an improved Python 3 uploadserver
-This README is originally wrote by ChatGPT with some modifications 
+
+**This is an experimental work with ChatGPT to build an improved Python 3 uploadserver.**
+
+> *Most parts of this README is originally written by ChatGPT with a few modifications.*
 
 This application is a Flask file upload server which allows users to upload files and download them at a later time. The uploaded files are stored on the server and can be accessed or deleted by the user.
 
@@ -43,7 +45,6 @@ Some improvements that can be made to the application include:
 - Adding user authentication to prevent unauthorized access.
 - Adding the ability to rename files.
 - Adding the ability to search for files.
-- Moving the location of the uploads folder and changing the default port. 
 
 ### Changing the default port:
 
