@@ -26,10 +26,6 @@ To download a file, you can navigate to the home page of the application and cli
 
 To delete a file, you can navigate to the home page of the application and click on the "Delete" button next to the file you want to delete. You will be prompted to confirm the deletion. Click "Delete" to confirm the deletion, or "Cancel" to cancel the deletion.
 
-## File types:
-
-The application supports the following file types for upload and download: jpg, jpeg, png, gif. Other file types can be added by modifying the get_file_list function in the app.py file.
-
 ## Limitations:
 
 The application has the following limitations:
