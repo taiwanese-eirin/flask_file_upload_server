@@ -49,7 +49,7 @@ Some improvements that can be made to the application include:
 
 The default port for the application is 5000. To change this, modify the following line in app.py:
 
-`app.run(debug=True, port=XXXX)`
+`app.run(host='0.0.0.0', port=XXXX)`
 
 where `XXXX` is the desired port number.
 
