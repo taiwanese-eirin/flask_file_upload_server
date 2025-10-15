@@ -101,7 +101,21 @@
             color: #0056b3;
             text-decoration: underline;
         }
+
+	/* Hide audio on screens with max-width of 768px or less (commonly mobile) */
+        .non-mobile {
+            display: block;
+        }
+
+        @media only screen and (max-width: 1024px) {
+        .non-mobile {
+            display: none;
+        }
+  }
     </style>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/icons8-star-keek-16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/icons8-star-keek-32.png') }}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='img/icons8-star-keek-96.png') }}">
 </head>
 <body>
     <div class="container">
@@ -112,25 +126,31 @@
             <button type="submit" class="btn btn-primary">Upload</button>
         </form>
         {% if files %}
-        <hr>
-        <h1>Download File</h1>
-        <ul class="list-group">
-            {% for file in files %}
-	        <div class="file">
-		    {% if file.type in ['jpg', 'jpeg', 'png', 'gif'] %}
-		        <p align="center"><img src="{{ url_for('download_file', filename=file.name) }}" width="300"></p>
-                    {% elif file.type in ['mp4', 'webm', 'mov'] %}
-		        <p align="center"><video src="{{ url_for('download_file', filename=file.name) }}" width="300" controls></video></p>
-                    {% endif %}
-		    <p align="center"><a href="{{ url_for('download_file', filename=file.name) }}">{{ file.name }}</a></p>
-                    <form action="{{ url_for('delete_file', filename=file.name) }}" method="post">
-                        <input type="hidden" name="file_name" value="{{ file.name }}">
-			<button type="submit" class="btn btn-primary delete-button" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
-                    </form>
-                </div>
-            {% endfor %}
-        </ul>
+            <hr>
+            <h1>Download File</h1>
+            <ul class="list-group">
+                {% for file in files %}
+	            <div class="file">
+	                {% if file.type in ['jpg', 'jpeg', 'png', 'gif'] %}
+		            <p align="center"><img src="{{ url_for('download_file', filename=file.name) }}" width="300"></p>
+                        {% elif file.type in ['mp4', 'webm', 'mov'] %}
+		            <p align="center"><video src="{{ url_for('download_file', filename=file.name) }}" width="300" controls></video></p>
+                        {% elif file.type in ['mp3', 'wav', 'm4a'] %}
+			<div class="non-mobile">
+			    <p align="center"><audio src="{{ url_for('download_file', filename=file.name) }}" width="300" controls></audio></p>
+			</div>
+                        {% endif %}
+
+		        <p align="center"><a href="{{ url_for('download_file', filename=file.name) }}">{{ file.name }}</a></p>
+                        <form action="{{ url_for('delete_file', filename=file.name) }}" method="post">
+                            <input type="hidden" name="file_name" value="{{ file.name }}">
+		            <button type="submit" class="btn btn-primary delete-button" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </ul>
         {% endif %}
     </div>
 </body>
 </html>
+
