@@ -1,63 +1,140 @@
 # Flask File Upload Server
 
-This application is a Flask file upload server which allows users to upload files and download them at a later time. The uploaded files are stored on the server and can be accessed or deleted by the user.
+This is a simple Flask file upload server, containerized with Docker for easy development and deployment.
 
-## Getting started:
+## Getting started
 
-To get started with the application, you need to have Python 3 and Flask installed. You can use pip3 to install Flask: `pip3 install Flask`.
+Ensure you have Docker and Docker Compose installed on your system.
 
-You can start the application by running the app.py file. This can be done using the command: `python3 app.py`.
+1.  **Set Up Environment Variables**
 
-Once the application is running, you can access it in your browser at http://localhost:5000/ or http://127.0.0.1:5000/.
+    Copy the example environment file and edit it as needed.
+    ```bash
+    cp .env.example .env
+    ```
 
-## Uploading files:
+2.  **Changing the Docker Port**
 
-To upload files, you need to navigate to the home page of the application in your browser. You will see a file upload form where you can select one or more files to upload. After selecting the file(s), click the "Upload" button to upload the file(s). The uploaded files will be saved to the UPLOAD_FOLDER location as specified in the app.py file.
+    The application runs internally on port `8000` within the container. If you need to change the port accessible on your host machine (e.g., to run on port `8080` instead of `8000`), edit the ports section in `docker-compose.yml`:
+    ```yaml
+    ports:
+      - "HOST_PORT:8000"
+    ```
 
-## Downloading files:
+2.  **Build and Run the Service**
 
-To download a file, you can navigate to the home page of the application and click on the file you want to download. This will download the file to your computer.
+    Use `docker compose` to build the image and start the container in the background.
+    ```bash
+    docker compose up --build -d
+    ```
 
-## Deleting files:
+3.  **Check the Service Status**
 
-To delete a file, you can navigate to the home page of the application and click on the "Delete" button next to the file you want to delete. You will be prompted to confirm the deletion. Click "Delete" to confirm the deletion, or "Cancel" to cancel the deletion.
+    You can view the service logs with the following command.
+    ```bash
+    docker compose logs -f web
+    ```
 
-## Limitations:
+4.  **Stop the Service**
 
-The application has the following limitations:
+    To gracefully stop and remove the containers and network defined in `docker-compose.yml`, run:
+    ```bash
+    docker compose down
+    ```
 
-- It does not currently support user authentication, so anyone who can access the application can upload, download, and delete files.
-- It does not currently support the ability to rename files.
-- It does not currently support the ability to search for files.
+5.  **Delete Uploded Files**
 
-## Improvements:
+    To stop the service and permanently remove the Docker volumes (including the uploaded files), run:
+    ```bash
+    docker compose down -v
+    ```
 
-Some improvements that can be made to the application include:
+## Standalone Execution (Without Docker Compose)
 
-- Adding user authentication to prevent unauthorized access.
-- Adding the ability to rename files.
-- Adding the ability to search for files.
+You can also run this project without Docker Compose, either directly on your local machine for development or using a `docker run` command.
 
-### Changing the default port:
+### 1. Local Development (Without Docker)
 
-The default port for the application is 5000. To change this, modify the following line in app.py:
+This method is suitable for quick testing and development directly on your machine.
 
-`app.run(host='0.0.0.0', port=XXXX)`
+1.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-where `XXXX` is the desired port number.
+2.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-### Changing the default uploads path:
+3.  **Changing the default port:**
 
-To change the default uploads path, modify the following line in app.py:
+    The default port for the application is `8000`. To change this, modify the following line in `app.py`:
+    ```python
+    app.run(host='0.0.0.0', port=XXXX)
+    ```
 
-`UPLOAD_FOLDER = b'/uploadserver'`  # Define the folder where uploaded files will be saved
+4.  **Run the application:**
+    The application will create an `uploads` directory in your project folder.
+    ```bash
+    python app.py
+    ```
+    The server will be available at `http://localhost:XXXX`.
 
-where `/uploadserver` is the desired path to the new uploads folder.
+### 2. Using `docker run`
 
-## Previewing files:
+This method is suitable for production-like environments where you want to run the application as a standalone container.
 
-The application currently supports previewing images and videos.
+1.  **Build the Docker image:**
+    ```bash
+    docker build -t flask_file_upload_server:latest .
+    ```
 
+2.  **Run the container:**
+    This command starts the container, maps port 8000, and creates a named volume `my_uploads` to persist uploaded files.
+    ```bash
+    docker run -d --name my-flask-app -p 8000:8000 -v my_uploads:/data/uploads --restart unless-stopped flask_file_upload_server:latest
+    ```
 
+### Deploying with Systemd
 
+You can use the templates in the `deploy/systemd/` directory to run the application as a systemd service for automatic startup and process management.
 
+**Example: Using the `docker-compose` based systemd service**
+
+1.  **Copy the Service File**
+    ```bash
+    sudo cp deploy/systemd/flask_upload_compose.service /etc/systemd/system/
+    ```
+
+2.  **Modify the Service Configuration**
+    Edit `/etc/systemd/system/flask_upload_compose.service` and set `WorkingDirectory` to the absolute path of your deployed project. (Default: `/srv/uploads`)
+
+3.  **Set Up Environment Variables**
+
+    In `WorkingDirectory`, prepare the `docker compose` environments:
+
+    - Copy the example environment:
+    ```bash
+    cp .env.example .env
+    ```
+
+    - Edit `docker-compose.yml` port:
+    ```yaml
+    ports:
+      - "HOST_PORT:8000"
+    ```
+    
+4.  **Enable and Start the Service**
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now flask_upload_compose.service
+    ```
+
+4.  **View Service Logs**
+    ```bash
+    journalctl -u flask_upload_compose.service -f
+    ```
+
+#### **Note:** It is recommended to use a reverse proxy (such as *Nginx*) in front of the application container to handle SSL/TLS termination and serve static files.

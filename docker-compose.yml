@@ -1,0 +1,38 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flask_file_upload_server:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Safe defaults; can be overridden in .env
+      - FLASK_ENV=production
+      - UPLOAD_FOLDER=/data/uploads
+      - MAX_CONTENT_LENGTH=104857600
+      - GUNICORN_WORKERS=3
+    volumes:
+      # Mount code for development convenience (optional in production)
+      - ./:/app:delegated
+      # Use a named volume for uploads. This is managed by Docker and is generally
+      # preferred over bind mounts for application data.
+      - uploads:/data/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Define the named volume
+volumes:
+  uploads:
+    driver: local
