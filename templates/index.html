@@ -73,6 +73,7 @@
             margin-top: 50px;
         }
 
+        /* Original list-group styles - these are now hidden by the last rule */
         .list-group {
             margin-top: 30px;
             display: flex;
@@ -102,7 +103,7 @@
             text-decoration: underline;
         }
 
-	/* Hide audio on screens with max-width of 768px or less (commonly mobile) */
+        /* Hide audio on screens with max-width of 768px or less (commonly mobile) */
         .non-mobile {
             display: block;
         }
@@ -111,7 +112,119 @@
         .non-mobile {
             display: none;
         }
-  }
+        }
+        
+        /* --- New Styles Applied to ALL Screens --- */
+
+        /* Grid layout container */
+        .file-grid {
+            display: grid;
+            /* Creates a responsive grid. Items have a min width of 250px and a max of 1fr (filling available space). */
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px; /* Gap between items */
+            margin-top: 30px;
+        }
+
+        /* File Card */
+        .file-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Ensures content doesn't overflow the rounded corners */
+            background-color: #f9f9f9;
+        }
+
+        /* Preview area */
+        .file-preview {
+            width: 100%;
+            height: 200px; /* A fixed height for the preview area */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #eee;
+            position: relative;
+        }
+
+        /* Common styles for preview media (image/video) */
+        .file-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover; 
+        }
+
+        .file-preview video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Audio player styles */
+        .file-preview audio {
+            width: 90%;
+            position: absolute;
+            bottom: 10px;
+            left: 5%;
+        }
+
+        .file-preview .audio-icon {
+            font-size: 5rem;
+            opacity: 0.3;
+        }
+
+        /* Generic file icon */
+        .generic-file-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 4rem;
+            color: #888;
+        }
+
+        .generic-file-icon small {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* File info area */
+        .file-info {
+            padding: 15px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .file-info a {
+            color: #007bff;
+            text-decoration: none;
+            word-break: break-all; /* Prevents long filenames from breaking the layout */
+        }
+
+        .file-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* A custom delete button style */
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+            padding: 8px 16px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        /* Ensure the original list-group styles are hidden to only show the grid */
+        .list-group, .list-group-item {
+            display: none;
+        }
     </style>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/icons8-star-keek-16.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/icons8-star-keek-32.png') }}">
@@ -127,28 +240,35 @@
         </form>
         {% if files %}
             <hr>
-            <h1>Download File</h1>
-            <ul class="list-group">
+            <h1>Uploaded Files</h1>
+            <div class="file-grid">
                 {% for file in files %}
-	            <div class="file">
-	                {% if file.type in ['jpg', 'jpeg', 'png', 'gif'] %}
-		            <p align="center"><img src="{{ url_for('download_file', filename=file.name) }}" width="300"></p>
+                <div class="file-card">
+                    <div class="file-preview">
+                        {% if file.type in ['jpg', 'jpeg', 'png', 'gif'] %}
+                            <img src="{{ url_for('download_file', filename=file.name) }}" alt="{{ file.name }}">
                         {% elif file.type in ['mp4', 'webm', 'mov'] %}
-		            <p align="center"><video src="{{ url_for('download_file', filename=file.name) }}" width="300" controls></video></p>
+                            <video src="{{ url_for('download_file', filename=file.name) }}" controls></video>
                         {% elif file.type in ['mp3', 'wav', 'm4a'] %}
-			<div class="non-mobile">
-			    <p align="center"><audio src="{{ url_for('download_file', filename=file.name) }}" width="300" controls></audio></p>
-			</div>
+                            <audio src="{{ url_for('download_file', filename=file.name) }}" controls></audio>
+                            <div class="audio-icon">🎵</div>
+                        {% else %}
+                            <div class="generic-file-icon">
+                                <span>📄</span>
+                                <small>{{ file.type }}</small>
+                            </div>
                         {% endif %}
-
-		        <p align="center"><a href="{{ url_for('download_file', filename=file.name) }}">{{ file.name }}</a></p>
-                        <form action="{{ url_for('delete_file', filename=file.name) }}" method="post">
+                    </div>
+                    <div class="file-info">
+                        <a href="{{ url_for('download_file', filename=file.name) }}" title="{{ file.name }}">{{ file.name }}</a>
+                        <form action="{{ url_for('delete_file', filename=file.name) }}" method="post" style="margin-top: 10px;">
                             <input type="hidden" name="file_name" value="{{ file.name }}">
-		            <button type="submit" class="btn btn-primary delete-button" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
                         </form>
                     </div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% endif %}
     </div>
 </body>
