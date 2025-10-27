@@ -138,3 +138,10 @@ You can use the templates in the `deploy/systemd/` directory to run the applicat
     ```
 
 #### **Note:** It is recommended to use a reverse proxy (such as *Nginx*) in front of the application container to handle SSL/TLS termination and serve static files.
+
+---
+### Credits
+
+Favicon icon by: [Icons8](https://icons8.com)
+
+**Please note that the icons are seperate works and are NOT covered by the license of the source code.**
