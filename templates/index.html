@@ -157,7 +157,7 @@
         .file-preview video {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain;
+            object-fit: cover;
         }
 
         /* Audio player styles */
@@ -250,7 +250,7 @@
                         {% elif file.type in ['mp4', 'webm', 'mov'] %}
                             <video src="{{ url_for('download_file', filename=file.name) }}" controls></video>
                         {% elif file.type in ['mp3', 'wav', 'm4a'] %}
-                            <audio src="{{ url_for('download_file', filename=file.name) }}" controls></audio>
+                            <div class="non-mobile"><audio src="{{ url_for('download_file', filename=file.name) }}" controls></audio></div>
                             <div class="audio-icon">🎵</div>
                         {% else %}
                             <div class="generic-file-icon">
