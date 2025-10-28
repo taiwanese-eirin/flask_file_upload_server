@@ -1,8 +1,8 @@
 # Flask File Upload Server
 
-This is a simple Flask file upload server, containerized with Docker for easy development and deployment.
-
 ![sampleview](doc/sampleview.png)
+
+This is a simple Flask file upload server, containerized with Docker for easy development and deployment.
 
 ## Getting started
 
