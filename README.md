@@ -109,7 +109,7 @@ You can use the templates in the `deploy/systemd/` directory to run the applicat
     ```
 
 2.  **Modify the Service Configuration**
-    Edit `/etc/systemd/system/flask_upload_compose.service` and set `WorkingDirectory` to the absolute path of your deployed project. (Default: `/srv/uploads`)
+    Edit `/etc/systemd/system/flask_upload_compose.service` and set `WorkingDirectory` to the absolute path of your deployed project. (Default: `/opt/flask_file_upload_server`)
 
 3.  **Set Up Environment Variables**
 
