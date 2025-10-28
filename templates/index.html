@@ -144,7 +144,7 @@
             justify-content: center;
             align-items: center;
             background-color: #eee;
-            position: relative;
+            position: relative; /* Important: For absolutely positioning the play button overlay */
         }
 
         /* Common styles for preview media (image/video) */
@@ -154,10 +154,42 @@
             object-fit: cover; 
         }
 
-        .file-preview video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+        /* Video and Overlay Container */
+        .video-overlay-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex; /* For centering content */
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Video Player Styles */
+        .video-overlay-container video {
+            width: 100%; /* Make video fill the container */
+            height: 100%;
+            object-fit: contain; /* Use cover to fill the preview area */
+            opacity: 0.8; /* Lower video opacity to highlight the play button */
+        }
+        
+        /* Play Button Overlay Styles */
+        .play-button-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Center perfectly */
+            font-size: 3rem; /* Play icon size */
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+            border-radius: 50%; /* Circular background */
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10; /* Ensure it is above the video */
+            pointer-events: none; /* Allows click events to pass through to the video element */
         }
 
         /* Audio player styles */
@@ -248,7 +280,9 @@
                         {% if file.type in ['jpg', 'jpeg', 'png', 'gif'] %}
                             <img src="{{ url_for('download_file', filename=file.name) }}" alt="{{ file.name }}">
                         {% elif file.type in ['mp4', 'webm', 'mov'] %}
-                            <video src="{{ url_for('download_file', filename=file.name) }}" controls></video>
+                            <div class="video-overlay-container">
+                                <video src="{{ url_for('download_file', filename=file.name) }}" controls poster="{{ url_for('static', filename='img/video_placeholder.png') }}"></video>
+                            </div>
                         {% elif file.type in ['mp3', 'wav', 'm4a'] %}
                             <div class="non-mobile"><audio src="{{ url_for('download_file', filename=file.name) }}" controls></audio></div>
                             <div class="audio-icon">🎵</div>
@@ -273,4 +307,3 @@
     </div>
 </body>
 </html>
-
