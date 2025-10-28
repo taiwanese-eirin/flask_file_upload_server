@@ -281,7 +281,7 @@
                             <img src="{{ url_for('download_file', filename=file.name) }}" alt="{{ file.name }}">
                         {% elif file.type in ['mp4', 'webm', 'mov'] %}
                             <div class="video-overlay-container">
-                                <video src="{{ url_for('download_file', filename=file.name) }}" controls poster="{{ url_for('static', filename='img/video_placeholder.png') }}"></video>
+                                <video src="{{ url_for('download_file', filename=file.name) }}" controls></video>
                             </div>
                         {% elif file.type in ['mp3', 'wav', 'm4a'] %}
                             <div class="non-mobile"><audio src="{{ url_for('download_file', filename=file.name) }}" controls></audio></div>
