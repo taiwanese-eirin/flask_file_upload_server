@@ -104,6 +104,7 @@
         }
 
         /* Hide audio on screens with max-width of 768px or less (commonly mobile) */
+        /* NOTE: The native audio element is hidden globally below, but this media query remains for legacy content. */
         .non-mobile {
             display: block;
         }
@@ -171,12 +172,9 @@
             object-fit: contain; /* Use cover to fill the preview area */
         }
         
-        /* Audio player styles */
+        /* Audio player styles for native player (now mostly overridden) */
         .file-preview audio {
-            width: 90%;
-            position: absolute;
-            bottom: 10px;
-            left: 5%;
+            /* The original styles for the native audio player are now overridden */
         }
 
         .file-preview .audio-icon {
@@ -236,6 +234,86 @@
         .list-group, .list-group-item {
             display: none;
         }
+
+        /* --- Custom Audio Player Styles --- */
+
+        /* Ensure the native audio tag is hidden for custom player implementation */
+        .audio-player-custom audio {
+            display: none !important; 
+        }
+
+        .audio-player-custom {
+            width: 100%;
+            /* Ensure the custom player fills the bottom of the preview area */
+            position: absolute; 
+            bottom: 0;
+            left: 0;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+            color: white;
+            box-sizing: border-box;
+            z-index: 10; /* Ensure it's above other elements in the preview */
+        }
+
+        .controls-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .play-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5em;
+            padding: 0;
+            line-height: 1;
+            position: relative; 
+            width: 30px; /* Explicit size for the SVG container */
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0; /* Prevents button from shrinking */
+        }
+
+        .play-btn svg {
+            position: absolute; /* Stack the two SVG icons */
+            width: 100%;
+            height: 100%;
+            color: white; 
+        }
+
+        /* Hide the pause icon by default */
+        .play-btn .icon-pause {
+            display: none;
+        }
+
+        .progress-bar-container {
+            flex-grow: 1; /* Occupy remaining space */
+            height: 8px;
+            background-color: #555;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%; /* Controlled by JavaScript */
+            background-color: #007bff;
+            border-radius: 4px;
+        }
+
+        .duration-display {
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        /* Override original non-mobile setting to hide the native audio element */
+        .non-mobile {
+            display: none !important;
+        }
     </style>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/icons8-star-keek-16.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/icons8-star-keek-32.png') }}">
@@ -263,7 +341,20 @@
                                 <video src="{{ url_for('download_file', filename=file.name) }}" controls></video>
                             </div>
                         {% elif file.type in ['mp3', 'wav', 'm4a'] %}
-                            <div class="non-mobile"><audio src="{{ url_for('download_file', filename=file.name) }}" controls></audio></div>
+                            <div class="audio-player-custom">
+                                <audio id="audio-{{ loop.index }}" src="{{ url_for('download_file', filename=file.name) }}"></audio>
+                                
+                                <div class="controls-container">
+                                    <button class="play-btn" data-audio-id="audio-{{ loop.index }}">
+                                        <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                        <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                    </button>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar"></div>
+                                    </div>
+                                    <span class="duration-display">0:00 / 0:00</span>
+                                </div>
+                            </div>
                             <div class="audio-icon">🎵</div>
                         {% else %}
                             <div class="generic-file-icon">
@@ -284,5 +375,99 @@
             </div>
         {% endif %}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const playButtons = document.querySelectorAll('.play-btn');
+
+            playButtons.forEach(button => {
+                const audioId = button.getAttribute('data-audio-id');
+                const audio = document.getElementById(audioId);
+                const card = button.closest('.file-card');
+                const progressBar = card.querySelector('.progress-bar');
+                const durationDisplay = card.querySelector('.duration-display');
+                const progressBarContainer = card.querySelector('.progress-bar-container');
+                
+                // Get SVG icons
+                const iconPlay = button.querySelector('.icon-play');
+                const iconPause = button.querySelector('.icon-pause');
+
+                // Function to format time (seconds -> minutes:seconds)
+                const formatTime = (seconds) => {
+                    const minutes = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+                };
+
+                // Click handler for play/pause
+                button.addEventListener('click', () => {
+                    if (audio.paused) {
+                        // Pause all other players
+                        document.querySelectorAll('audio').forEach(otherAudio => {
+                            if (otherAudio !== audio && !otherAudio.paused) {
+                                otherAudio.pause();
+                                
+                                // Reset icon for other buttons
+                                const otherButton = document.querySelector(`.play-btn[data-audio-id="${otherAudio.id}"]`);
+                                if(otherButton) {
+                                    otherButton.querySelector('.icon-play').style.display = 'block';
+                                    otherButton.querySelector('.icon-pause').style.display = 'none';
+                                }
+                            }
+                        });
+                        
+                        // Play current audio and switch icon
+                        audio.play();
+                        iconPlay.style.display = 'none';  // Hide play icon
+                        iconPause.style.display = 'block'; // Show pause icon
+                    } else {
+                        // Pause audio and switch icon
+                        audio.pause();
+                        iconPlay.style.display = 'block';  // Show play icon
+                        iconPause.style.display = 'none'; // Hide pause icon
+                    }
+                });
+
+                // Update progress bar and time display
+                audio.addEventListener('timeupdate', () => {
+                    const percent = (audio.currentTime / audio.duration) * 100;
+                    progressBar.style.width = `${percent}%`;
+                    
+                    if (!isNaN(audio.duration)) {
+                         durationDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+                    } else {
+                         durationDisplay.textContent = `${formatTime(audio.currentTime)} / 0:00`;
+                    }
+                });
+
+                // Playback ended
+                audio.addEventListener('ended', () => {
+                    iconPlay.style.display = 'block';
+                    iconPause.style.display = 'none';
+                    audio.currentTime = 0;
+                });
+
+                // Display total duration when metadata is loaded
+                audio.addEventListener('loadedmetadata', () => {
+                    if (!isNaN(audio.duration)) {
+                        durationDisplay.textContent = `0:00 / ${formatTime(audio.duration)}`;
+                    }
+                });
+                
+                // Seeking by clicking the progress bar
+                progressBarContainer.addEventListener('click', (e) => {
+                    if (isNaN(audio.duration)) return;
+                    
+                    const rect = progressBarContainer.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left; // Click position
+                    const width = rect.width; // Container width
+                    const percent = clickX / width;
+                    
+                    audio.currentTime = audio.duration * percent;
+                });
+
+            });
+        });
+    </script>
 </body>
 </html>
