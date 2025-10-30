@@ -53,9 +53,10 @@ Ensure you have Docker and Docker Compose installed on your system.
 
 6. **Stop, Delete Files, and Remove the Image**
 
-    To perform a complete cleanup by removing containers, networks, volumes, and the Docker image, use the --rmi all flag. This is useful when you want to free up disk space or force a complete rebuild next time.
+    To perform a complete cleanup by removing containers, networks, volumes, and the Docker image:
     ```
     docker compose down -v --rmi all
+    docker prune -f
     ```
 ## Standalone Execution (Without Docker Compose)
 
