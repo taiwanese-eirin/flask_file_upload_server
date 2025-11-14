@@ -56,7 +56,7 @@ Ensure you have Docker and Docker Compose installed on your system.
     To perform a complete cleanup by removing containers, networks, volumes, and the Docker image:
     ```
     docker compose down -v --rmi all
-    docker prune -f
+    docker system prune -f
     ```
 ## Standalone Execution (Without Docker Compose)
 
