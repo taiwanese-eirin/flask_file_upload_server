@@ -16,7 +16,7 @@ def get_file_extension(filename):
     return os.path.splitext(filename)[1]
 
 def get_file_list(folder_path):
-    # Fixed: Removed os.chdir() which caused race conditions in multi-threaded environments
+    # Avoid chdir() to prevent race conditions in multi-threaded environments
     try:
         file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
         return [{'name': f, 'type': get_file_extension(f)[1:].lower(), 'path': os.path.join(folder_path, f)} for f in file_list]
@@ -27,28 +27,48 @@ def get_file_list(folder_path):
 def get_file_time(file):
     return os.path.getmtime(file['path'])
 
+def get_unique_filename(folder, filename):
+    """
+    Return a filename that does not conflict with existing files in `folder`.
+    If filename exists, append a numeric counter before the extension, e.g.:
+      myfile.txt -> myfile (1).txt -> myfile (2).txt ...
+    This avoids overwriting existing files with the same name.
+    """
+    base, ext = os.path.splitext(filename)
+    candidate = filename
+    i = 1
+    full_path = os.path.join(folder, candidate)
+    # Loop until we find a filename that does not exist
+    while os.path.exists(full_path):
+        candidate = f"{base} ({i}){ext}"
+        full_path = os.path.join(folder, candidate)
+        i += 1
+    return candidate
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Handle file upload
+        # Handle file upload(s)
         files = request.files.getlist('file')
         for file in files:
             if file.filename:  # Ensure filename is not empty
                 filename = secure_filename(file.filename)
                 if filename:  # secure_filename may return empty string
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    # Process file
+                    # Use unique filename to avoid overwriting existing files
+                    unique_name = get_unique_filename(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_name))
+    # Build file list for display
     file_list_decoded = get_file_list(UPLOAD_FOLDER)
     file_list_decoded.sort(key=get_file_time, reverse=True)
     return render_template('index.html', files=file_list_decoded)
 
 @app.route('/uploads/<filename>')
 def download_file(filename):
-    # Fixed: Path traversal protection
-    if '..' in filename or filename.startswith('/'):  
+    # Protect against path traversal attacks
+    if '..' in filename or filename.startswith('/'):
         flash('Invalid filename')
         return redirect(url_for('index'))
-    # Additional validation: ensure file is within upload folder
+    # Ensure the requested file is inside the upload folder
     file_path = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     upload_folder_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
     if not file_path.startswith(upload_folder_abs):
@@ -59,12 +79,12 @@ def download_file(filename):
 @app.route('/delete/<filename>', methods=['GET', 'POST'])
 def delete_file(filename):
     if request.method == 'POST':
-        # Fixed: Path traversal protection in delete operation
-        if '..' in filename or filename.startswith('/'):  
+        # Protect against path traversal in delete operation
+        if '..' in filename or filename.startswith('/'):
             flash('Invalid filename')
             return redirect(url_for('index'))
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        # Additional validation
+        # Additional validation to ensure deletion stays within upload folder
         file_path_abs = os.path.abspath(file_path)
         upload_folder_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
         if not file_path_abs.startswith(upload_folder_abs):
